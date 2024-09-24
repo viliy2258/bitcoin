@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Crypto Prices</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Додаємо іконки Font Awesome -->
+  <style>
+    body.dark {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body.light {
+      background-color: #fff;
+      color: #000;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    /* Search input */
+    .search-bar {
+      padding: 10px;
+      width: 60%;
+      max-width: 400px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #333;
+      color: #fff;
+    }
+
+    .top-bar > * {
+      margin: 0 10px;
+    }
+
+    /* Theme toggle icon */
+    .theme-icon {
+      cursor: pointer;
+      font-size: 24px;
+      margin-right: 10px; /* Щоб бути ліворуч від пошукового поля */
+    }
+
+    /* Menu icon */
+    .menu-icon {
+      cursor: pointer;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      height: 24px;
+    }
+
+    .menu-icon div {
+      width: 30px;
+      height: 3px;
+      background-color: currentColor;
+    }
+
+    /* Filter modal (popup window) */
+    .filter-modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 100;
+      width: 90%;
+      max-width: 400px;
+      text-align: left;
+    }
+
+    /* Overlay to darken the background */
+    .overlay {
+      display: none; /* Hidden by default */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 99;
+    }
+
+    .filter-modal select {
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .filter-modal button {
+      background-color: #555;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    /* Notification styling */
+    .notification {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #333;
+      color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+
+    /* Styles for the crypto list */
+    .crypto-list {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .crypto-item {
+      background-color: #222;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: left;
+      transition: transform 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .crypto-item:hover {
+      transform: scale(1.05);
+    }
+
+    .crypto-name {
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .crypto-price {
+      font-weight: 400;
+      font-size: 1.2rem;
+      margin-left: 5px;
+    }
+
+    /* Modal styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover, .close:focus {
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* Chart container */
+    .chart-container {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 600px;
+      height: 400px;
+    }
+
+    /* Light theme elements */
+    body.light .crypto-item {
+      background-color: #e0e0e0;
+      color: #000;
+    }
+
+    body.light .filter-modal {
+      background-color: #ddd;
+      color: #000;
+    }
+
+    body.light .notification {
+      background-color: #555;
+      color: #fff;
+    }
+
+    body.light .search-bar {
+      background-color: #e0e0e0;
+      color: #000;
+    }
+
+    body.light .crypto-price {
+      color: #000;
+    }
+
+    /* Icons colors for dark and light themes */
+    body.light .theme-icon,
+    body.light .menu-icon div {
+      color: #000;
+    }
+
+    body.dark .theme-icon,
+    body.dark .menu-icon div {
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="dark">
+
+  <h1 id="heading-text">Ціни на криптовалюти</h1>
+
+  <!-- Top bar with search, theme icon, and menu -->
+  <div class="top-bar">
+    <!-- Theme Icon for switching theme -->
+    <i class="fas fa-moon theme-icon" id="theme-icon"></i>
+
+    <!-- Search Bar -->
+    <input type="text" id="search-bar" class="search-bar" placeholder="Пошук криптовалюти...">
+    
+    <!-- Menu Icon (Hamburger) -->
+    <div class="menu-icon" id="menu-icon">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </div>
+
+  <!-- Language and currency settings -->
+  <div class="filter-modal" id="filter-modal">
+    <h3 id="filter-heading">Мова та валюта</h3>
+    <select id="language-select">
+      <option value="ua">Українська</option>
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+    </select>
+    <select id="currency-select">
+      <option value="usd">USD</option>
+      <option value="uah">UAH</option>
+      <option value="rub">RUB</option>
+    </select>
+    <button id="apply-settings">Застосувати</button> <!-- Кнопка для підтвердження -->
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification"></div>
+
+  <ul id="crypto-list" class="crypto-list">
+    <!-- Dynamic content will be injected here -->
+  </ul>
+
+  <!-- Chart container for displaying price chart -->
+  <div id="chart-container" class="chart-container">
+    <canvas id="price-chart"></canvas>
+  </div>
+
+  <!-- Modal for detailed information -->
+  <div id="crypto-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modal-crypto-name"></h2>
+      <p><strong id="modal-price-label">Ціна:</strong> <span id="modal-crypto-price"></span></p>
+      <p><strong id="modal-marketcap-label">Капіталізація:</strong> <span id="modal-market-cap"></span></p>
+      <p><strong id="modal-change-label">Зміна за 24 години:</strong> <span id="modal-change-24h"></span></p>
+      <p><strong id="modal-supply-label">Загальна пропозиція:</strong> <span id="modal-total-supply"></span></p>
+    </div>
+  </div>
+
+  <!-- Include Chart.js library for price chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
